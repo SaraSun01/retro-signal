@@ -1,4 +1,4 @@
-# Weekly Team Feedback Tool — Concrete Architecture
+# RetroSignal — Concrete Architecture
 
 ## 1. Purpose
 

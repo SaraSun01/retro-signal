@@ -1,4 +1,4 @@
-# Weekly Team Feedback Tool — MVP Scope
+# RetroSignal — MVP Scope
 
 ## Product goal
 

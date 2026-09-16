@@ -1,4 +1,4 @@
-# Weekly Team Feedback MVP Backlog
+# RetroSignal MVP Backlog
 
 ## 1. Bootstrap the Django project
 Goal: Create an empty Python and Django project with one passing test.
