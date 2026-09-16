@@ -16,7 +16,8 @@ The architecture is designed around four product constraints:
 
 | Concern | Technology | Responsibility |
 | --- | --- | --- |
-| Web application | Django | Routing, domain logic, permissions, forms, templates, and admin operations |
+| Language | Python | Application and domain code |
+| Web framework | Django | Routing, permissions, forms, templates, and admin operations |
 | Dynamic UI | HTMX | Form submission, partial page replacement, polling, and lightweight commands |
 | Styling | Tailwind CSS | Responsive layout and reusable visual design |
 | Drag and drop | SortableJS | Moving cards between clusters and reordering clusters |
