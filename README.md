@@ -33,10 +33,10 @@ RetroSignal is a focused retrospective tool for project teams. It collects priva
 
 ## Project status
 
-RetroSignal is currently in the planning stage. The product scope and implementation architecture are defined, and the implementation backlog is ready; application code has not been started yet.
+RetroSignal is currently in the planning stage. The product scope and implementation architecture are defined, and the implementation backlog is tracked in GitHub Issues; application code has not been started yet.
 
 ## Documentation
 
 - [MVP plan](_docs/plan.md)
 - [Architecture](_docs/architecture.md)
-- [Implementation backlog](_docs/tasks.md)
+- [Implementation backlog](https://github.com/SaraSun01/retro-signal/issues)
