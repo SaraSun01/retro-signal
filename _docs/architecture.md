@@ -23,7 +23,7 @@ The architecture is designed around four product constraints:
 | Realtime delivery | Django Channels | WebSocket connections and board event notifications |
 | Primary database | PostgreSQL | Durable relational data, transactions, constraints, and row locking |
 | Channel layer | Redis | Channels fan-out between web instances |
-| AI integration | Provider-neutral Django services | Synchronous clustering and extraction requests |
+| AI integration | OpenAI Responses API | Synchronous clustering and extraction with Structured Outputs |
 | Application server | ASGI server | Serves Django HTTP and WebSocket traffic |
 | Deployment | Container | A single Django web process type |
 
@@ -38,7 +38,7 @@ flowchart LR
     Web[Django ASGI application]
     DB[(PostgreSQL)]
     Redis[(Redis)]
-    AI[AI provider]
+    AI[OpenAI Responses API]
 
     Member -->|HTTPS and WebSocket| Web
     Facilitator -->|HTTPS and WebSocket| Web
@@ -86,9 +86,9 @@ This is the central domain application. Workflow rules belong in explicit servic
 - Pasted transcript text
 - AI-generated draft suggestions
 - Facilitator review and confirmation
-- Provider adapters for structured extraction
+- OpenAI client for structured extraction
 
-External provider code stays behind interfaces so providers can be changed without rewriting the retrospective domain.
+OpenAI access stays behind Django service interfaces so SDK, model, prompt, and API configuration do not leak into the retrospective domain.
 
 ## 5. Request and update model
 
@@ -438,7 +438,7 @@ The MVP makes AI requests directly from Django when a facilitator asks for clust
 sequenceDiagram
     participant Browser
     participant Django
-    participant Provider as AI provider
+    participant Provider as OpenAI Responses API
     participant DB as PostgreSQL
 
     Browser->>Django: Submit pasted transcript
@@ -453,14 +453,16 @@ The request uses a strict timeout and returns a retryable error without saving p
 
 This design intentionally has no task queue, worker, upload pipeline, or media processing.
 
-## 11. AI boundaries
+## 11. OpenAI integration boundaries
 
-The domain layer calls provider-neutral interfaces:
+The domain layer calls these service interfaces:
 
 - `ClusteringService.suggest(cards)`
 - `ExtractionService.extract(transcript, topics)`
 
-Provider responses are validated against explicit schemas before being stored. Suggested owners are matched only to active project memberships. An unmatched or ambiguous owner remains empty for facilitator review.
+The first implementation of both interfaces uses the OpenAI Responses API. Requests use Structured Outputs with explicit JSON schemas, `store=false`, a configured timeout, and output-token limits. The API key comes from the runtime secret store, and the model ID comes from configuration rather than application code.
+
+OpenAI responses are validated before being stored. Suggested owners are matched only to active project memberships. An unmatched or ambiguous owner remains empty for facilitator review.
 
 AI output is always treated as untrusted draft data:
 
@@ -511,7 +513,7 @@ Do not introduce a client-side application store for the MVP. JavaScript modules
 - Require HTTPS in production and secure, HTTP-only session cookies.
 - Use Django CSRF protection for every state-changing HTTP request, including HTMX requests.
 - Apply rate limits to sign-in, invitations, feedback submission, and AI requests.
-- Enforce a transcript text length limit before calling the AI provider.
+- Enforce a transcript text length limit before calling OpenAI.
 - Escape all feedback, transcript, note, and AI-generated content in templates.
 - Keep provider credentials in the runtime secret store.
 - Do not place card bodies, transcript text, anonymous edit grants, or individual votes in application logs.
@@ -559,7 +561,7 @@ Capture at least these metrics:
 - Active WebSocket connections and reconnect rate
 - AI request duration, timeout rate, and failures
 - Time from transcript submission to suggestions ready for review
-- Provider latency, error rate, and usage
+- OpenAI latency, error rate, and usage
 - Retrospective stage-transition failures
 
 Report unexpected exceptions to an error-tracking service. Health checks should separately cover the web process, database connection, and Redis connection.
@@ -585,7 +587,7 @@ Prioritize state and permission boundaries:
 - WebSocket group membership requires an active project membership.
 - Socket events cause authorized fragment refreshes.
 - Repeated transcript submissions with the same idempotency key do not duplicate suggestions.
-- Provider timeouts do not save partial suggestions.
+- OpenAI timeouts do not save partial suggestions.
 
 ### Browser tests
 
@@ -599,7 +601,7 @@ Keep a small end-to-end suite around the complete MVP path: submit feedback, rev
 4. Add voting with transactional budgets and hidden totals.
 5. Add discussion topics, notes, decisions, action items, and summary publication.
 6. Add Channels events and live fragment refreshes to the already-working HTTP flows.
-7. Add pasted transcript storage and synchronous AI extraction behind provider-neutral interfaces.
+7. Add pasted transcript storage and synchronous extraction through the OpenAI-backed service interfaces.
 8. Complete privacy hardening, audit events, retention cleanup, observability, and end-to-end tests.
 
 Building the HTTP workflow before realtime delivery keeps every operation usable and testable even when a socket disconnects.
