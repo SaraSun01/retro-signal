@@ -22,12 +22,12 @@ The architecture is designed around four product constraints:
 | Drag and drop | SortableJS | Moving cards between clusters and reordering clusters |
 | Realtime delivery | Django Channels | WebSocket connections and board event notifications |
 | Primary database | PostgreSQL | Durable relational data, transactions, constraints, and row locking |
-| Channel layer | Redis | Channels fan-out between web instances |
+| Channel layer | Redis | Shared backend for Django Channels |
 | AI integration | OpenAI Responses API | Synchronous clustering and extraction with Structured Outputs |
 | Application server | ASGI server | Serves Django HTTP and WebSocket traffic |
-| Deployment | Container | A single Django web process type |
+| Runtime environment | Docker Compose | Runs Django, PostgreSQL, and Redis together |
 
-Exact package versions should be pinned when implementation begins. PostgreSQL and Redis should be managed services in production when possible.
+Exact package and container-image versions should be pinned when implementation begins.
 
 ## 3. System context
 
@@ -523,33 +523,29 @@ Do not introduce a client-side application store for the MVP. JavaScript modules
 
 The audit log records that a feedback card was created or changed without recording the anonymous author's identity and card identifier together.
 
-## 15. Deployment topology
+## 15. Docker Compose
 
-Use one application image and one web process type.
+Docker Compose is the only runtime topology in the MVP. It runs one Django application container with PostgreSQL and Redis.
 
 ```mermaid
 flowchart TB
-    Proxy[Managed HTTPS ingress]
-    Web1[Django ASGI web instance]
-    Web2[Django ASGI web instance]
-    Redis[(Managed Redis)]
-    Postgres[(Managed PostgreSQL)]
+    Browser[Browser]
+    Web[Django ASGI container]
+    Redis[(Redis container)]
+    Postgres[(PostgreSQL container)]
 
-    Proxy --> Web1
-    Proxy --> Web2
-    Web1 --> Postgres
-    Web2 --> Postgres
-    Web1 --> Redis
-    Web2 --> Redis
+    Browser --> Web
+    Web --> Postgres
+    Web --> Redis
 ```
 
-Required process types:
+The Compose project defines three services:
 
-- `web`: Django under an ASGI server, serving HTTP and WebSockets
-- `migrate`: one-off Django migration command during deployment
-- `assets`: build-time Tailwind and static-file compilation
+- `web`: builds the application image and runs Django under an ASGI server for HTTP and WebSockets
+- `db`: runs PostgreSQL with a named volume for durable database data
+- `redis`: runs the Django Channels backend
 
-The first production deployment can use one web instance. Redis exists only for Channels fan-out and can be added when live updates must work across multiple web instances. Local development can use the in-memory channel layer.
+Database migrations run as one-off commands against the `web` service. Tailwind compilation and Django static-file collection happen while building the application image. Configuration comes from environment variables, while secrets stay in an uncommitted environment file.
 
 ## 16. Observability and operations
 
