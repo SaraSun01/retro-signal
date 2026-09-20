@@ -33,7 +33,23 @@ RetroSignal is a focused retrospective tool for project teams. It collects priva
 
 ## Project status
 
-RetroSignal is currently in the planning stage. The product scope and implementation architecture are defined, and the implementation backlog is tracked in GitHub Issues; application code has not been started yet.
+RetroSignal is in early development. The product scope and implementation architecture are defined, and the implementation backlog is tracked in GitHub Issues.
+
+## Local development
+
+Create and activate a virtual environment, then install the pinned dependency:
+
+```shell
+python -m pip install -r requirements.txt
+```
+
+## Tests
+
+Run the test suite with one command:
+
+```shell
+python manage.py test
+```
 
 ## Documentation
 
